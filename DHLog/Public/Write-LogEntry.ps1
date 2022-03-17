@@ -154,9 +154,9 @@ function Write-LogEntry {
         $TimeStamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss:fff"
         # Determine the calling Function/Script name
         $CallingName = $(Get-PSCallStack)[1].FunctionName
-        If ($CallingName -like "<ScriptBlock>*") {
+        if ($CallingName -like "<ScriptBlock>*") {
             $CallingName = $(Get-PSCallStack)[1].Command
-            If ($CallingName -like "<ScriptBlock>*") {
+            if ($CallingName -like "<ScriptBlock>*") {
                 $CallingName = "Interactive"
             }
         }
