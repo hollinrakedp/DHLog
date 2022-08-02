@@ -1,7 +1,7 @@
 function Write-LogEntry {
     <#
-    .Synopsis
-    Write a log message to a log filetime stamp. 
+    .SYNOPSIS
+    Writes a time-stamped message to a log file. 
     
     .DESCRIPTION
     This function adds more robust logging functionality for other scripts and functions. Each log entry is composed of three parts: timestamp, log level, and the message. The timestamp is in the following format: "yyyy-MM-dd HH:mm:ss:fff". There are three (3) log levels: ERROR, WARN, INFO. Each of these direct output to a corresponding stream as well as to the log. (ERROR to the Error stream, WARN to the Warning stream, INFO to the Verbose stream).
@@ -25,7 +25,8 @@ function Write-LogEntry {
     The path to the log file to which you would like to write. If this location does not exist, it will be created. If this parameter is not provided, a check is executed to see if the global scope or calling function/script has a $LogPath variable. If found, it will be used. If a value is still not found, the default value of 'C:\temp\Logs' will be used. The overall precedence order (from highest to lowest) is as follows: Directly specified, Calling function/script, Global scope, Default value.
     
     .PARAMETER LogFile
-    The name of the log file to be used. If the file does not exist, it will be created. If it exists, new entries will be appended. If this parameter is not provided, a check is executed to see if the global scope or calling function/script has a $LogFile variable. If found, it will be used. If a value is still not found, the default value of 'PowerShell-yyyyMMdd.log' will be used. The overall precedence order (from highest to lowest) is as follows: Directly specified, Calling function/script, Global scope, Default value.
+    The name of the log file to be used. If the file does not exist, it will be created. If it exists, new entries will be appended. If this parameter is not provided, a check is executed to see if the global scope or calling function/script has a $LogFile variable. If found, it will be used. If a value is still not found, the default value of 'PowerShell-yyyyMMdd.log' will be used.
+    The overall precedence order (from highest to lowest) is as follows: Directly specified, Calling function/script, Global scope, Default value.
 
     .PARAMETER LogLevel
     Specify the level of the log message being written to the log (ERROR, WARN, INFO). If the parameter is not provided, the default value of 'INFO' will be used.
