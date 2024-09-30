@@ -13,9 +13,9 @@ function Write-LogEntry {
     .NOTES
     Name       : Write-LogEntry
     Author     : Darren Hollinrake
-    Version    : 1.0
+    Version    : 1.1
     DateCreated: 2021-10-31
-    DateUpdated: 
+    DateUpdated: 2024-09-29
 
 
     .PARAMETER LogMessage
@@ -140,14 +140,14 @@ function Write-LogEntry {
         if (!$PSBoundParameters.ContainsKey('LogFile')) {
             $CallingLogFile = $PSCmdlet.GetVariableValue('LogFile')
             if (![string]::IsNullOrEmpty($CallingLogFile)) {
-                Write-Verbose "Using `$LogFile variable found in another scope"
+                Write-Debug "Using `$LogFile variable found in another scope"
                 $LogFile = $CallingLogFile
             }
         }
         if (!$PSBoundParameters.ContainsKey('LogPath')) {
             $CallingLogPath = $PSCmdlet.GetVariableValue('LogPath')
             if (![string]::IsNullOrEmpty($CallingLogPath)) {
-                Write-Verbose "Using `$LogFile variable found in another scope"
+                Write-Debug "Using `$LogFile variable found in another scope"
                 $LogPath = $CallingLogPath
             }
         }
@@ -168,7 +168,7 @@ function Write-LogEntry {
             'LogMessage' {
                 Write-Verbose "Log File Location: $LogFullPath"
                 if (!(Test-Path $LogFullPath)) {
-                    Write-Verbose "Creating Log File"
+                    Write-Debug "Creating Log File"
                     New-Item -Path $LogFullPath -Force -ItemType File | Out-Null
                 }
                 $LogEntry = "$TimeStamp $($LogLevel.ToUpper())`: $LogMessage"
