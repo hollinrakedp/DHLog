@@ -31,6 +31,9 @@ Describe "Write-LogEntry" {
         It "Should have parameter: StopLog" {
             Get-Command Write-LogEntry | Should -HaveParameter -ParameterName StopLog -Type switch
         }
+        It "Should have parameter: Structured" {
+            Get-Command Write-LogEntry | Should -HaveParameter -ParameterName Structured -Type switch
+        }
         It "Should have parameter: Tee" {
             Get-Command Write-LogEntry | Should -HaveParameter -ParameterName Tee -Type switch
         }

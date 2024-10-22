@@ -15,7 +15,7 @@ function Write-LogEntry {
     Author     : Darren Hollinrake
     Version    : 1.1.1
     DateCreated: 2021-10-31
-    DateUpdated: 2024-09-29
+    DateUpdated: 2024-10-22
 
 
     .PARAMETER LogMessage
@@ -36,6 +36,9 @@ function Write-LogEntry {
 
     .PARAMETER StopLog
     Writes an entry to the log indicating the stop/end of the calling function or script. If a neither of those can be found, it will assume it was called from an interactive session and show 'Interactive'.
+
+    .PARAMETER Structured
+    Writes the log entry as a structured JSON object. This can be useful for parsing the log entries programmatically.
 
     .PARAMETER Tee
     Sends the output to both the host output and log file.
@@ -92,6 +95,30 @@ function Write-LogEntry {
     ------------
     2021-10-31 08:15:52:674 INFO: ***** Start "My-FunctionName" *****
 
+    .EXAMPLE
+    Write-LogEntry -StopLog
+    Writes a message indicating the end of a script or function to the default log path/filename (C:\temp\Logs\PowerShell-yyyyMMdd.log)
+
+    Log Location
+    ------------
+    C:\temp\Logs\PowerShell-20211031.log
+
+    Log Entry
+    ------------
+    2021-10-31 08:15:52:674 INFO: ***** Stop "My-FunctionName" *****
+
+    .EXAMPLE
+    Write-LogEntry -LogMessage 'Log message' -Structured
+    Writes the message provided to the default log path/file. Because the parameter LogLevel was not supplied, it will be use 'INFO'. The log entry will be written as a structured JSON object.
+
+    Log Location
+    ------------
+    C:\Logs\PowerShell-20211031.log
+
+    Log Entry
+    ------------
+    {"TimeStamp":"2021-10-31 08:13:12:864","LogLevel":"INFO","Message":"Log message","FunctionName":"My-FunctionName"}
+
     #>
 
     [CmdletBinding(SupportsShouldProcess, DefaultParameterSetName = 'LogMessage')]
@@ -127,6 +154,10 @@ function Write-LogEntry {
         [switch]$StopLog,
 
         [Parameter()]
+        [switch]$Structured,
+
+        [Parameter(ParameterSetName = 'LogMessage',
+            ValueFromPipelineByPropertyName)]
         [switch]$Tee
     )
 
@@ -171,7 +202,16 @@ function Write-LogEntry {
                     Write-Debug "Creating Log File"
                     New-Item -Path $LogFullPath -Force -ItemType File | Out-Null
                 }
-                $LogEntry = "$TimeStamp $($LogLevel.ToUpper())`: $LogMessage"
+                if ($Structured) {
+                    $LogEntry = @{
+                        TimeStamp = $TimeStamp
+                        LogLevel = $LogLevel.ToUpper()
+                        Message = $LogMessage
+                        FunctionName = $CallingName
+                    } | ConvertTo-Json -Compress
+                } else {
+                    $LogEntry = "$TimeStamp $($LogLevel.ToUpper())`: $LogMessage"
+                }
                 $LogEntry | Add-Content -Path $LogFullPath
                 if ($Tee) {
                     Write-Host $LogEntry
@@ -184,11 +224,11 @@ function Write-LogEntry {
             }
             'StartLog' {
                 $StartLogMessage = "***** Start `"$CallingName`" *****"
-                Write-LogEntry -LogMessage "$StartLogMessage" -Tee:$Tee
+                Write-LogEntry -LogMessage "$StartLogMessage" -Structured:$Structured -Tee:$Tee
             }
             'StopLog' {
                 $StopLogMessage = "***** Stop `"$CallingName`" *****"
-                Write-LogEntry -LogMessage "$StopLogMessage" -Tee:$Tee
+                Write-LogEntry -LogMessage "$StopLogMessage" -Structured:$Structured -Tee:$Tee
             }
         }
     }
