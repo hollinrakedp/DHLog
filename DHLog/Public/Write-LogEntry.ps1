@@ -4,7 +4,7 @@ function Write-LogEntry {
     Writes a time-stamped message to a log file.
 
     .DESCRIPTION
-    This function adds more robust logging functionality for other scripts and functions. Each log entry is composed of three parts: timestamp, log level, and the message. The timestamp is in the following format: "yyyy-MM-dd HH:mm:ss:fff". There are three (3) log levels: ERROR, WARN, INFO. Each of these direct output to a corresponding stream as well as to the log. (ERROR to the Error stream, WARN to the Warning stream, INFO to the Verbose stream).
+    This function adds more robust logging functionality for other scripts and functions. Each log entry is composed of three parts: timestamp, log level, and the message. The timestamp is in the following format: "yyyy-MM-dd HH:mm:ss:fff". There are three (5) log levels: ERROR, WARN, INFO, DEBUG, VERBOSE. Each of these direct output to a corresponding stream as well as to the log. (ERROR to the Error stream, WARN to the Warning stream, INFO to the Verbose stream, DEBUG to the Debug stream, VERBOSE to the Verbose stream).
 
     Example Entry
     -------------
@@ -29,7 +29,7 @@ function Write-LogEntry {
     The overall precedence order (from highest to lowest) is as follows: Directly specified, Calling function/script, Global scope, Default value.
 
     .PARAMETER LogLevel
-    Specify the level of the log message being written to the log (ERROR, WARN, INFO). If the parameter is not provided, the default value of 'INFO' will be used.
+    Specify the level of the log message being written to the log (ERROR, WARN, INFO, DEBUG, VERBOSE). If the parameter is not provided, the default value of 'INFO' will be used.
 
     .PARAMETER StartLog
     Writes an entry to the log indicating the start/beginning of the calling function or script. If neither of those can be found, it will assume it was called from an interactive session and show 'Interactive'.
@@ -141,7 +141,7 @@ function Write-LogEntry {
 
         [Parameter(ParameterSetName = 'LogMessage',
             ValueFromPipelineByPropertyName)]
-        [ValidateSet("ERROR", "WARN", "INFO")]
+        [ValidateSet("ERROR", "WARN", "INFO", "DEBUG", "VERBOSE")]
         [Alias('Level')]
         [string]$LogLevel = "INFO",
 
@@ -217,9 +217,11 @@ function Write-LogEntry {
                     Write-Host $LogEntry
                 }
                 switch ($LogLevel) {
-                    'Error' { Write-Error "$LogMessage" }
-                    'Warn' { Write-Warning "$LogMessage" }
-                    'Info' { Write-Verbose "$LogMessage" }
+                    'ERROR' { Write-Error "$LogMessage" }
+                    'WARN' { Write-Warning "$LogMessage" }
+                    'INFO' { Write-Verbose "$LogMessage" }
+                    'DEBUG' { Write-Debug "$LogMessage" }
+                    'VERBOSE' { Write-Verbose "$LogMessage" }
                 }
             }
             'StartLog' {
