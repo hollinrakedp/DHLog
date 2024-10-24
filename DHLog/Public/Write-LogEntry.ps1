@@ -13,9 +13,9 @@ function Write-LogEntry {
     .NOTES
     Name       : Write-LogEntry
     Author     : Darren Hollinrake
-    Version    : 1.1.1
+    Version    : 1.2.0
     DateCreated: 2021-10-31
-    DateUpdated: 2024-10-22
+    DateUpdated: 2024-10-23
 
 
     .PARAMETER LogMessage
@@ -40,6 +40,15 @@ function Write-LogEntry {
     .PARAMETER Structured
     Writes the log entry as a structured JSON object. This can be useful for parsing the log entries programmatically.
 
+    .PARAMETER RotateLog
+    Rotates the log file before writing the new log entry.
+
+    .PARAMETER MaxLogSize
+    The maximum size of the log file in megabytes before it is rotated. This parameter is only applicable when the RotateLog parameter is used. If the parameter ForceRotate is used, this parameter is ignored and the log file is rotated regardless of its size.
+
+    .PARAMETER ForceRotate
+    Forces the rotation of the log file irrespective of its size. This parameter is only applicable when the RotateLog parameter is used.
+    
     .PARAMETER Tee
     Sends the output to both the host output and log file.
 
@@ -72,8 +81,8 @@ function Write-LogEntry {
     2021-10-31 08:13:12:864 INFO: Restarting Server.
 
     .EXAMPLE
-    Write-LogEntry -LogMessage 'Folder does not exist.' -Path C:\Logs\ -Level Error
-    Writes the message as an error message to the specified log path with the default filename (Powershell-yyyyMMdd.log). The message is also written to the error stream.
+    Write-LogEntry -LogMessage 'Folder does not exist.' -Path C:\Logs\ -Level Error -RotateLog -MaxLogSize 5
+    Writes the message as an error message to the specified log path with the default filename (Powershell-yyyyMMdd.log). The message is also written to the error stream. If the log file exceeds 5 MB in size, it will be rotated.
 
     Log Location
     ------------
@@ -154,6 +163,15 @@ function Write-LogEntry {
         [switch]$StopLog,
 
         [Parameter()]
+        [switch]$RotateLog,
+
+        [Parameter()]
+        [int]$MaxLogSize,
+
+        [Parameter()]
+        [switch]$ForceRotate,
+
+        [Parameter()]
         [switch]$Structured,
 
         [Parameter(ParameterSetName = 'LogMessage',
@@ -195,6 +213,19 @@ function Write-LogEntry {
     }
 
     process {
+        if ($RotateLog) {
+            $RotateSplat = @{
+                LogPath = $LogFullPath
+            }
+            if ($PSBoundParameters.ContainsKey('ForceRotate')) {
+                $RotateSplat['Force'] = $true
+            }
+            elseif ($PSBoundParameters.ContainsKey('MaxLogSize')) {
+                $RotateSplat['MaxSizeMB'] = $MaxLogSize
+            }
+
+            Invoke-RotateLogFile @RotateSplat
+        }
         switch ($PSCmdlet.ParameterSetName) {
             'LogMessage' {
                 Write-Verbose "Log File Location: $LogFullPath"

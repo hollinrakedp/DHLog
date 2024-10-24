@@ -1,4 +1,4 @@
-﻿BeforeAll {
+BeforeAll {
     Import-Module $PSScriptRoot\..\DHLog\DHLog -Force
 }
 
@@ -30,6 +30,15 @@ Describe "Write-LogEntry" {
         }
         It "Should have parameter: StopLog" {
             Get-Command Write-LogEntry | Should -HaveParameter -ParameterName StopLog -Type switch
+        }
+        It "Should have parameter: RotateLog" {
+            Get-Command Write-LogEntry | Should -HaveParameter -ParameterName RotateLog -Type switch
+        }
+        It "Should have parameter: MaxLogSize" {
+            Get-Command Write-LogEntry | Should -HaveParameter -ParameterName MaxLogSize -Type int
+        }
+        It "Should have parameter: ForceRotate" {
+            Get-Command Write-LogEntry | Should -HaveParameter -ParameterName ForceRotate -Type switch
         }
         It "Should have parameter: Structured" {
             Get-Command Write-LogEntry | Should -HaveParameter -ParameterName Structured -Type switch
