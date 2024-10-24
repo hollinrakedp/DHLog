@@ -234,14 +234,16 @@ function Write-LogEntry {
                 }
                 if ($Structured) {
                     $LogEntry = @{
-                        TimeStamp = $TimeStamp
-                        LogLevel = $LogLevel.ToUpper()
-                        Message = $LogMessage
+                        TimeStamp    = $TimeStamp
+                        LogLevel     = $LogLevel.ToUpper()
+                        Message      = $LogMessage
                         FunctionName = $CallingName
                     } | ConvertTo-Json -Compress
-                } else {
+                }
+                else {
                     $LogEntry = "$TimeStamp $($LogLevel.ToUpper())`: $LogMessage"
                 }
+
                 if ($PSCmdlet.ShouldProcess("Path: $LogFullPath")) {
                     $LogEntry | Add-Content -Path $LogFullPath
                 }
@@ -251,6 +253,7 @@ function Write-LogEntry {
                         Write-Host $LogEntry
                     }
                 }
+
                 switch ($LogLevel) {
                     'ERROR' { Write-Error "$LogMessage" }
                     'WARN' { Write-Warning "$LogMessage" }
