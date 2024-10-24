@@ -1,4 +1,4 @@
-BeforeAll {
+﻿BeforeAll {
     Import-Module $PSScriptRoot\..\DHLog\DHLog -Force
 }
 
@@ -13,6 +13,11 @@ Describe "Write-LogEntry" {
         $Message = 'Test Message'
     }
     Context "Verify Parameters" {
+        It "Should have 11 parameters (excluding common parameters)" {
+            $CommonParameters = @('Verbose', 'Debug', 'ErrorAction', 'WarningAction', 'InformationAction', 'ProgressAction', 'ErrorVariable', 'WarningVariable', 'InformationVariable', 'OutVariable', 'OutBuffer', 'PipelineVariable', 'WhatIf', 'Confirm')
+            $Parameters = (Get-Command Write-LogEntry).Parameters.Keys | Where-Object { $_ -notin $CommonParameters }
+            $Parameters.Count | Should -Be 11
+        }
         It "Should have parameter: LogMessage" {
             Get-Command Write-LogEntry | Should -HaveParameter -ParameterName LogMessage -Mandatory
         }
