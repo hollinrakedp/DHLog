@@ -174,8 +174,7 @@ function Write-LogEntry {
         [Parameter()]
         [switch]$Structured,
 
-        [Parameter(ParameterSetName = 'LogMessage',
-            ValueFromPipelineByPropertyName)]
+        [Parameter(ValueFromPipelineByPropertyName)]
         [switch]$Tee
     )
 
