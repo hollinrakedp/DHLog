@@ -4,7 +4,7 @@ function Write-LogEntry {
     Writes a time-stamped message to a log file.
 
     .DESCRIPTION
-    This function adds more robust logging functionality for other scripts and functions. Each log entry is composed of three parts: timestamp, log level, and the message. The timestamp is in the following format: "yyyy-MM-dd HH:mm:ss:fff". There are three (3) log levels: ERROR, WARN, INFO. Each of these direct output to a corresponding stream as well as to the log. (ERROR to the Error stream, WARN to the Warning stream, INFO to the Verbose stream).
+    This function adds more robust logging functionality for other scripts and functions. Each log entry is composed of three parts: timestamp, log level, and the message. The timestamp is in the following format: "yyyy-MM-dd HH:mm:ss:fff". There are five (5) log levels: ERROR, WARN, INFO, DEBUG, VERBOSE. Each of these direct output to a corresponding stream as well as to the log. (ERROR to the Error stream, WARN to the Warning stream, INFO to the Verbose stream, DEBUG to the Debug stream, VERBOSE to the Verbose stream).
 
     Example Entry
     -------------
@@ -13,9 +13,9 @@ function Write-LogEntry {
     .NOTES
     Name       : Write-LogEntry
     Author     : Darren Hollinrake
-    Version    : 1.1.1
+    Version    : 1.2.0
     DateCreated: 2021-10-31
-    DateUpdated: 2024-10-22
+    DateUpdated: 2024-10-23
 
 
     .PARAMETER LogMessage
@@ -29,7 +29,7 @@ function Write-LogEntry {
     The overall precedence order (from highest to lowest) is as follows: Directly specified, Calling function/script, Global scope, Default value.
 
     .PARAMETER LogLevel
-    Specify the level of the log message being written to the log (ERROR, WARN, INFO). If the parameter is not provided, the default value of 'INFO' will be used.
+    Specify the level of the log message being written to the log (ERROR, WARN, INFO, DEBUG, VERBOSE). If the parameter is not provided, the default value of 'INFO' will be used.
 
     .PARAMETER StartLog
     Writes an entry to the log indicating the start/beginning of the calling function or script. If neither of those can be found, it will assume it was called from an interactive session and show 'Interactive'.
@@ -40,6 +40,15 @@ function Write-LogEntry {
     .PARAMETER Structured
     Writes the log entry as a structured JSON object. This can be useful for parsing the log entries programmatically.
 
+    .PARAMETER RotateLog
+    Rotates the log file before writing the new log entry.
+
+    .PARAMETER MaxLogSize
+    The maximum size of the log file in megabytes before it is rotated. This parameter is only applicable when the RotateLog parameter is used. If the parameter ForceRotate is used, this parameter is ignored and the log file is rotated regardless of its size.
+
+    .PARAMETER ForceRotate
+    Forces the rotation of the log file irrespective of its size. This parameter is only applicable when the RotateLog parameter is used.
+    
     .PARAMETER Tee
     Sends the output to both the host output and log file.
 
@@ -72,8 +81,8 @@ function Write-LogEntry {
     2021-10-31 08:13:12:864 INFO: Restarting Server.
 
     .EXAMPLE
-    Write-LogEntry -LogMessage 'Folder does not exist.' -Path C:\Logs\ -Level Error
-    Writes the message as an error message to the specified log path with the default filename (Powershell-yyyyMMdd.log). The message is also written to the error stream.
+    Write-LogEntry -LogMessage 'Folder does not exist.' -Path C:\Logs\ -Level Error -RotateLog -MaxLogSize 5
+    Writes the message as an error message to the specified log path with the default filename (Powershell-yyyyMMdd.log). The message is also written to the error stream. If the log file exceeds 5 MB in size, it will be rotated.
 
     Log Location
     ------------
@@ -141,7 +150,7 @@ function Write-LogEntry {
 
         [Parameter(ParameterSetName = 'LogMessage',
             ValueFromPipelineByPropertyName)]
-        [ValidateSet("ERROR", "WARN", "INFO")]
+        [ValidateSet("ERROR", "WARN", "INFO", "DEBUG", "VERBOSE")]
         [Alias('Level')]
         [string]$LogLevel = "INFO",
 
@@ -154,10 +163,18 @@ function Write-LogEntry {
         [switch]$StopLog,
 
         [Parameter()]
+        [switch]$RotateLog,
+
+        [Parameter()]
+        [int]$MaxLogSize,
+
+        [Parameter()]
+        [switch]$ForceRotate,
+
+        [Parameter()]
         [switch]$Structured,
 
-        [Parameter(ParameterSetName = 'LogMessage',
-            ValueFromPipelineByPropertyName)]
+        [Parameter(ValueFromPipelineByPropertyName)]
         [switch]$Tee
     )
 
@@ -195,6 +212,19 @@ function Write-LogEntry {
     }
 
     process {
+        if ($RotateLog) {
+            $RotateSplat = @{
+                LogPath = $LogFullPath
+            }
+            if ($PSBoundParameters.ContainsKey('ForceRotate')) {
+                $RotateSplat['Force'] = $true
+            }
+            elseif ($PSBoundParameters.ContainsKey('MaxLogSize')) {
+                $RotateSplat['MaxSizeMB'] = $MaxLogSize
+            }
+
+            Invoke-RotateLogFile @RotateSplat
+        }
         switch ($PSCmdlet.ParameterSetName) {
             'LogMessage' {
                 Write-Verbose "Log File Location: $LogFullPath"
@@ -204,22 +234,32 @@ function Write-LogEntry {
                 }
                 if ($Structured) {
                     $LogEntry = @{
-                        TimeStamp = $TimeStamp
-                        LogLevel = $LogLevel.ToUpper()
-                        Message = $LogMessage
+                        TimeStamp    = $TimeStamp
+                        LogLevel     = $LogLevel.ToUpper()
+                        Message      = $LogMessage
                         FunctionName = $CallingName
                     } | ConvertTo-Json -Compress
-                } else {
+                }
+                else {
                     $LogEntry = "$TimeStamp $($LogLevel.ToUpper())`: $LogMessage"
                 }
-                $LogEntry | Add-Content -Path $LogFullPath
-                if ($Tee) {
-                    Write-Host $LogEntry
+
+                if ($PSCmdlet.ShouldProcess("Path: $LogFullPath")) {
+                    $LogEntry | Add-Content -Path $LogFullPath
                 }
+
+                if ($PSCmdlet.ShouldProcess("Message: $LogMessage")) {
+                    if ($Tee) {
+                        Write-Host $LogEntry
+                    }
+                }
+
                 switch ($LogLevel) {
-                    'Error' { Write-Error "$LogMessage" }
-                    'Warn' { Write-Warning "$LogMessage" }
-                    'Info' { Write-Verbose "$LogMessage" }
+                    'ERROR' { Write-Error "$LogMessage" }
+                    'WARN' { Write-Warning "$LogMessage" }
+                    'INFO' { Write-Verbose "$LogMessage" }
+                    'DEBUG' { Write-Debug "$LogMessage" }
+                    'VERBOSE' { Write-Verbose "$LogMessage" }
                 }
             }
             'StartLog' {

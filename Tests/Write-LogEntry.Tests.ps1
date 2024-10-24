@@ -13,7 +13,12 @@ Describe "Write-LogEntry" {
         $Message = 'Test Message'
     }
     Context "Verify Parameters" {
-        It "Should have parameter: 'LogPath'" {
+        It "Should have 11 parameters (excluding common parameters)" {
+            $CommonParameters = @('Verbose', 'Debug', 'ErrorAction', 'WarningAction', 'InformationAction', 'ProgressAction', 'ErrorVariable', 'WarningVariable', 'InformationVariable', 'OutVariable', 'OutBuffer', 'PipelineVariable', 'WhatIf', 'Confirm')
+            $Parameters = (Get-Command Write-LogEntry).Parameters.Keys | Where-Object { $_ -notin $CommonParameters }
+            $Parameters.Count | Should -Be 11
+        }
+        It "Should have parameter: LogMessage" {
             Get-Command Write-LogEntry | Should -HaveParameter -ParameterName LogMessage -Mandatory
         }
         It "Should have parameter: LogPath" {
@@ -30,6 +35,15 @@ Describe "Write-LogEntry" {
         }
         It "Should have parameter: StopLog" {
             Get-Command Write-LogEntry | Should -HaveParameter -ParameterName StopLog -Type switch
+        }
+        It "Should have parameter: RotateLog" {
+            Get-Command Write-LogEntry | Should -HaveParameter -ParameterName RotateLog -Type switch
+        }
+        It "Should have parameter: MaxLogSize" {
+            Get-Command Write-LogEntry | Should -HaveParameter -ParameterName MaxLogSize -Type int
+        }
+        It "Should have parameter: ForceRotate" {
+            Get-Command Write-LogEntry | Should -HaveParameter -ParameterName ForceRotate -Type switch
         }
         It "Should have parameter: Structured" {
             Get-Command Write-LogEntry | Should -HaveParameter -ParameterName Structured -Type switch
