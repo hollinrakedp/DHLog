@@ -242,9 +242,14 @@ function Write-LogEntry {
                 } else {
                     $LogEntry = "$TimeStamp $($LogLevel.ToUpper())`: $LogMessage"
                 }
-                $LogEntry | Add-Content -Path $LogFullPath
-                if ($Tee) {
-                    Write-Host $LogEntry
+                if ($PSCmdlet.ShouldProcess("Path: $LogFullPath")) {
+                    $LogEntry | Add-Content -Path $LogFullPath
+                }
+
+                if ($PSCmdlet.ShouldProcess("Message: $LogMessage")) {
+                    if ($Tee) {
+                        Write-Host $LogEntry
+                    }
                 }
                 switch ($LogLevel) {
                     'ERROR' { Write-Error "$LogMessage" }
