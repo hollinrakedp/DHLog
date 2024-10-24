@@ -13,7 +13,7 @@ Describe "Write-LogEntry" {
         $Message = 'Test Message'
     }
     Context "Verify Parameters" {
-        It "Should have parameter: 'LogPath'" {
+        It "Should have parameter: LogMessage" {
             Get-Command Write-LogEntry | Should -HaveParameter -ParameterName LogMessage -Mandatory
         }
         It "Should have parameter: LogPath" {
